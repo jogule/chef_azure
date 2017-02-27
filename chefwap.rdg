@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RDCMan programVersion="2.7" schemaVersion="3">
+  <file>
+    <credentialsProfiles />
+    <properties>
+      <expanded>True</expanded>
+      <name>chefwap</name>
+    </properties>
+    <logonCredentials inherit="None">
+      <profileName scope="Local">Custom</profileName>
+      <userName>myadmin</userName>
+      <password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA9v+ePBxgE0anJtZj3sbe4QAAAAACAAAAAAADZgAAwAAAABAAAABBq31s7+2bHujOywCRnm9wAAAAAASAAACgAAAAEAAAALbZI2ECLPOoAaAwTSnhLBsgAAAApjC6K1BPFZGKCPADWFlCiUCUaZtFsYW/JidZ2wvmyAwUAAAAMN+bLsyt+PaWUWAmmvJtfVLNZe4=</password>
+      <domain />
+    </logonCredentials>
+    <server>
+      <properties>
+        <name>jglwap1pipwapadfs01.eastus2.cloudapp.azure.com</name>
+      </properties>
+    </server>
+    <server>
+      <properties>
+        <name>jglwap1pipwapadminhub01.eastus2.cloudapp.azure.com</name>
+      </properties>
+    </server>
+    <server>
+      <properties>
+        <name>jglwap1pipwapsql01.eastus2.cloudapp.azure.com</name>
+      </properties>
+    </server>
+    <server>
+      <properties>
+        <name>jglwap1pipwaptenanthub01.eastus2.cloudapp.azure.com</name>
+      </properties>
+    </server>
+  </file>
+  <connected />
+  <favorites />
+  <recentlyUsed />
+</RDCMan>

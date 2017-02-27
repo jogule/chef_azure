@@ -1,0 +1,422 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters" : {
+        "deploymentPrefix": { 
+            "type": "string", 
+            "defaultValue": "jglwap1" 
+        },
+        "vmsNames": { 
+            "type": "array", 
+            "defaultValue": [
+                "WAPADFS01",
+                "WAPAdminHub01",
+                "WAPTenantHub01"
+            ] 
+        },
+        "vmsNicIPAddresses": {
+            "type": "array",
+            "defaultValue": [
+                "10.0.1.10",
+                "10.0.1.30",
+                "10.0.1.40"
+            ]
+        },
+        "sqlVmsNames": { 
+            "type": "array", 
+            "defaultValue": [
+                "WAPSQL01"
+            ] 
+        },
+        "sqlNicIPAddresses": {
+            "type": "array",
+            "defaultValue": [
+                "10.0.1.20"
+            ]
+        },
+        "vNetName": {
+            "type": "string",
+            "defaultValue": "WAP-vnet",
+            "metadata": {
+                "Description": "Name of the Virtual Network where all of the Resources are being deployed."
+            }
+        },
+        "addressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "Description": "Address prefix"
+            }
+        },
+        "wapSubnetName": {
+            "type": "string",
+            "defaultValue": "wap1-subnet",
+            "metadata": {
+                "Description": "WAP Subnet Name."
+            }
+        },
+        "wapSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "Description": "WAP Subnet Prefix"
+            }
+        },
+        "storageType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_ZRS"
+            ],
+            "metadata": {
+                "Description": "The Type of Storage used for the Resources being deployed."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "myadmin",
+            "metadata": {
+                "Description": "The name of the Windows Server account with local admin rights and admin rights in Active Directory."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "defaultValue": "Colombia2017",
+            "metadata": {
+                "Description": "The password of the Windows Server account with local admin rights and admin rights in Actve Directory."
+            }
+        },
+        "winImagePublisher": {
+            "type": "string",
+            "defaultValue": "MicrosoftWindowsServer"
+        },
+        "winImageOffer": {
+            "type": "string",
+            "defaultValue": "WindowsServer"
+        },
+        "winImageSku": {
+            "type": "string",
+            "defaultValue": "2012-R2-Datacenter"
+        },
+        "winImageVersion": {
+            "type": "string",
+            "defaultValue": "latest"
+        },
+        "sqlImagePublisher": {
+            "type": "string",
+            "defaultValue": "MicrosoftSQLServer"
+        },
+        "sqlImageOffer": {
+            "type": "string",
+            "defaultValue": "SQL2014SP2-WS2012R2"
+        },
+        "sqlImageSku": {
+            "type": "string",
+            "defaultValue": "Enterprise"
+        },
+        "sqlImageVersion": {
+            "type": "string",
+            "defaultValue": "latest"
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS3_v2",
+            "allowedValues": [
+                "Standard_DS1_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ],
+            "metadata": {
+                "description": "The Size of all VMs being deployed in Azure."
+            }
+        },
+        "dataDiskSize": {
+            "type": "int",
+            "defaultValue": 100,
+            "metadata": {
+                "description": "The Size of the VM Data Disk in GB."
+            }
+        }
+    },
+    "variables": {
+        "storageName":  "[concat(parameters('deploymentPrefix'), 'sa', substring(uniquestring(resourceGroup().id),0,3))]"
+     },
+    "resources": [ 
+        { //vnet
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('vNetName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('wapSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('wapSubnetPrefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        { //storageAccount
+            "name": "[variables('storageName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "[variables('storageName')]"
+            },
+            "properties": {
+                "accountType": "[parameters('storageType')]"
+            }
+        },
+        { //nics
+            "name": "[concat(parameters('vmsNames')[copyIndex()], 'nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('vNetName'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/', toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()])))]"
+            ],
+            "tags": {
+                "displayName": "[concat(parameters('vmsNames')[copyIndex()], 'nic')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('vmsNicIPAddresses')[copyIndex()]]",
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName')), '/subnets/', parameters('wapSubnetName'))]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()])))]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "copy": { 
+                "name": "nicscopy", 
+                "count": "[length(parameters('vmsNames'))]" 
+            }
+        },
+        { //pips
+            "name": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()]))]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()]))]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()]))]"
+                }
+            },
+            "copy": { 
+                "name": "pipscopy", 
+                "count": "[length(parameters('vmsNicIPAddresses'))]" 
+            }
+        },
+        { //vms
+            "name": "[parameters('vmsNames')[copyIndex()]]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('vmsNames')[copyIndex()], 'nic')]"
+            ],
+            "tags": {
+                "displayName": "[parameters('vmsNames')[copyIndex()]]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmsNames')[copyIndex()]]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('winImagePublisher')]",
+                        "offer": "[parameters('winImageOffer')]",
+                        "sku": "[parameters('winImageSku')]",
+                        "version": "[parameters('winImageVersion')]"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('vmsNames')[copyIndex()], 'OSDisk')]",
+                        "vhd": {
+                            "uri": "[concat('http://', variables('storageName'), '.blob.core.windows.net/vhds', '/', concat(parameters('vmsNames')[copyIndex()], 'OSDisk'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "vhd": {
+                                "uri": "[concat('http://', variables('storageName'), '.blob.core.windows.net/vhds', '/', concat(parameters('vmsNames')[copyIndex()], 'DataDisk'),'-1.vhd')]"
+                            },
+                            "name": "[concat(parameters('vmsNames')[copyIndex()],'DataDisk-1')]",
+                            "caching": "None",
+                            "createOption": "Empty",
+                            "diskSizeGB": "[parameters('dataDiskSize')]",
+                            "lun": 0
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmsNames')[copyIndex()], 'nic'))]"
+                        }
+                    ]
+                }
+            },
+            "copy": { 
+                "name": "vmscopy", 
+                "count": "[length(parameters('vmsNames'))]" 
+            }
+        },
+        { //sql_nics
+            "name": "[concat(parameters('sqlVmsNames')[copyIndex()], 'nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('vNetName'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/', toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()])))]"
+            ],
+            "tags": {
+                "displayName": "[concat(parameters('sqlVmsNames')[copyIndex()], 'nic')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('sqlNicIPAddresses')[copyIndex()]]",
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName')), '/subnets/', parameters('wapSubnetName'))]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()])))]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "copy": { 
+                "name": "sqlnicscopy", 
+                "count": "[length(parameters('sqlVmsNames'))]" 
+            }
+        },
+        { //sql_pips
+            "name": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()]))]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()]))]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()]))]"
+                }
+            },
+            "copy": { 
+                "name": "sqlpipscopy", 
+                "count": "[length(parameters('sqlNicIPAddresses'))]" 
+            }
+        },
+        { //sql_vms
+            "name": "[parameters('sqlVmsNames')[copyIndex()]]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('sqlVmsNames')[copyIndex()], 'nic')]"
+            ],
+            "tags": {
+                "displayName": "[parameters('sqlVmsNames')[copyIndex()]]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('sqlVmsNames')[copyIndex()]]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('sqlImagePublisher')]",
+                        "offer": "[parameters('sqlImageOffer')]",
+                        "sku": "[parameters('sqlImageSku')]",
+                        "version": "[parameters('sqlImageVersion')]"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('sqlVmsNames')[copyIndex()], 'OSDisk')]",
+                        "vhd": {
+                            "uri": "[concat('http://', variables('storageName'), '.blob.core.windows.net/vhds', '/', concat(parameters('sqlVmsNames')[copyIndex()], 'OSDisk'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "vhd": {
+                                "uri": "[concat('http://', variables('storageName'), '.blob.core.windows.net/vhds', '/', concat(parameters('sqlVmsNames')[copyIndex()], 'DataDisk'),'-1.vhd')]"
+                            },
+                            "name": "[concat(parameters('sqlVmsNames')[copyIndex()],'DataDisk-1')]",
+                            "caching": "None",
+                            "createOption": "Empty",
+                            "diskSizeGB": "[parameters('dataDiskSize')]",
+                            "lun": 0
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('sqlVmsNames')[copyIndex()], 'nic'))]"
+                        }
+                    ]
+                }
+            },
+            "copy": { 
+                "name": "sqlvmscopy", 
+                "count": "[length(parameters('sqlVmsNames'))]" 
+            }
+        }
+     ],
+    "outputs": {  }
+}
