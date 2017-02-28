@@ -9,17 +9,17 @@
         "vmsNames": {
             "type": "array",
             "defaultValue": [
-                "WAPADFS01",
+                "WAPADFS01"/*,
                 "WAPAdminHub01",
-                "WAPTenantHub01"
+                "WAPTenantHub01"*/
             ]
         },
         "vmsNicIPAddresses": {
             "type": "array",
             "defaultValue": [
-                "10.0.1.10",
+                "10.0.1.10"/*,
                 "10.0.1.30",
-                "10.0.1.40"
+                "10.0.1.40"*/
             ]
         },
         "sqlVmsNames": {
@@ -301,7 +301,7 @@
             "resources": [
                 {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat(parameters('vmsNames')[copyIndex()],'/createADForest')]",
+                    "name": "[concat(parameters('vmsNames')[copyIndex()],'/Configuration')]",
                     "apiVersion": "2015-05-01-preview",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
