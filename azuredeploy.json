@@ -9,17 +9,17 @@
         "vmsNames": {
             "type": "array",
             "defaultValue": [
-                "WAPADFS01"/*,
+                "WAPADFS01",
                 "WAPAdminHub01",
-                "WAPTenantHub01"*/
+                "WAPTenantHub01"
             ]
         },
         "vmsNicIPAddresses": {
             "type": "array",
             "defaultValue": [
-                "10.0.1.10"/*,
+                "10.0.1.10",
                 "10.0.1.30",
-                "10.0.1.40"*/
+                "10.0.1.40"
             ]
         },
         "sqlVmsNames": {
@@ -299,36 +299,7 @@
                 }
             },
             "resources": [
-                {
-                    "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat(parameters('vmsNames')[copyIndex()],'/Configuration')]",
-                    "apiVersion": "2015-05-01-preview",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmsNames')[copyIndex()])]"
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Powershell",
-                        "type": "DSC",
-                        "typeHandlerVersion": "2.22.0.0",
-                        "settings": {
-                            "ModulesUrl": "[concat(variables('baseURL'),parameters('vmsNames')[copyIndex()],'ConfScript.ps1.zip')]",
-                            "ConfigurationFunction": "[concat('ConfScript.ps1','\\ConfFunction')]",
-                            "Properties": {
-                                "DomainName": "[variables('addcDomainName')]",
-                                "adminCreds": {
-                                    "UserName": "[parameters('adminUsername')]",
-                                    "Password": "PrivateSettingsRef:adminPassword"
-                                }
-                            }
-                        },
-                        "protectedSettings": {
-                            "Items": {
-                                "adminPassword": "[parameters('adminPassword')]"
-                            }
-                        }
-                    }
-                }
+                
             ],
             "copy": {
                 "name": "vmscopy",
