@@ -321,7 +321,7 @@
                 {
                     "apiVersion": "2015-06-15",
                     "type": "extensions",
-                    "name": "WinFW WinRM allow access",
+                    "name": "WinRMAllowAccess",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.Compute/virtualMachines/', parameters('vmsNames')[copyIndex()])]"
