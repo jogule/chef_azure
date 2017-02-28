@@ -299,7 +299,51 @@
                 }
             },
             "resources": [
-                
+                /*{
+                    "type": "extensions",
+                    "name": "MyExtension",
+                    "apiVersion": "2015-05-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/',parameters('vmsNames')[copyIndex()])]"
+                    ],
+                    "properties": {
+                        "publisher": "Chef.Bootstrap.WindowsAzure",
+                        "type": "ChefClient",
+                        "typeHandlerVersion": "1210.12",
+                        "settings": {
+                            "validation_key": " Validation key",
+                            "client_rb": "client_rb file",
+                            "runlist": "Optional runlist"
+                        }
+                    }
+                },*/
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "extensions",
+                    "name": "WinFW WinRM allow access",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmsNames')[copyIndex()])]"
+                    ],
+                    "tags": {
+                        "displayName": "WinFW WinRM allow access"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.8",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[concat(variables('baseURL'),'chef-fw-rules.ps1')]"
+                            ]
+                        },
+                        "protectedSettings": {
+                            "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File chef-fw-rules.ps1"
+                        }
+                    }
+                }
             ],
             "copy": {
                 "name": "vmscopy",
