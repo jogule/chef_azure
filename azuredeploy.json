@@ -149,15 +149,86 @@
     },
     "variables": {
         "storageName": "[concat(parameters('deploymentPrefix'), 'sa', substring(uniquestring(resourceGroup().id),0,3))]",
-        "baseURL": "https://raw.githubusercontent.com/jogule/chef_azure/master/",
-        "addcDomainName": "jonguz.tk"
+        "baseURL": "https://raw.githubusercontent.com/jogule/chef_azure/master/"
     },
     "resources": [
+        { //nsg
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "nsg",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "nsg"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "rdp-rule",
+                        "properties": {
+                            "description": "Allow RDP",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "http-rule",
+                        "properties": {
+                            "description": "Allow HTTP",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "https-rule",
+                        "properties": {
+                            "description": "Allow HTTPS",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "443",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 102,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "winrm-rule",
+                        "properties": {
+                            "description": "Allow WinRM",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "5985",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 102,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
         { //vnet
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('vNetName')]",
             "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+            ],
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -168,7 +239,10 @@
                     {
                         "name": "[parameters('wapSubnetName')]",
                         "properties": {
-                            "addressPrefix": "[parameters('wapSubnetPrefix')]"
+                            "addressPrefix": "[parameters('wapSubnetPrefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                            }
                         }
                     }
                 ]
