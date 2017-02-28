@@ -1,18 +1,18 @@
 {
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters" : {
-        "deploymentPrefix": { 
-            "type": "string", 
-            "defaultValue": "jglwap1" 
+    "parameters": {
+        "deploymentPrefix": {
+            "type": "string",
+            "defaultValue": "jglwap1"
         },
-        "vmsNames": { 
-            "type": "array", 
+        "vmsNames": {
+            "type": "array",
             "defaultValue": [
                 "WAPADFS01",
                 "WAPAdminHub01",
                 "WAPTenantHub01"
-            ] 
+            ]
         },
         "vmsNicIPAddresses": {
             "type": "array",
@@ -22,11 +22,11 @@
                 "10.0.1.40"
             ]
         },
-        "sqlVmsNames": { 
-            "type": "array", 
+        "sqlVmsNames": {
+            "type": "array",
             "defaultValue": [
                 "WAPSQL01"
-            ] 
+            ]
         },
         "sqlNicIPAddresses": {
             "type": "array",
@@ -148,9 +148,11 @@
         }
     },
     "variables": {
-        "storageName":  "[concat(parameters('deploymentPrefix'), 'sa', substring(uniquestring(resourceGroup().id),0,3))]"
-     },
-    "resources": [ 
+        "storageName": "[concat(parameters('deploymentPrefix'), 'sa', substring(uniquestring(resourceGroup().id),0,3))]",
+        "baseURL": "https://raw.githubusercontent.com/jogule/chef_azure/master/",
+        "addcDomainName": "jonguz.tk"
+    },
+    "resources": [
         { //vnet
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Network/virtualNetworks",
@@ -177,7 +179,7 @@
             "type": "Microsoft.Storage/storageAccounts",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-05-01-preview",
-            "dependsOn": [ ],
+            "dependsOn": [],
             "tags": {
                 "displayName": "[variables('storageName')]"
             },
@@ -214,9 +216,9 @@
                     }
                 ]
             },
-            "copy": { 
-                "name": "nicscopy", 
-                "count": "[length(parameters('vmsNames'))]" 
+            "copy": {
+                "name": "nicscopy",
+                "count": "[length(parameters('vmsNames'))]"
             }
         },
         { //pips
@@ -224,7 +226,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-05-01-preview",
-            "dependsOn": [ ],
+            "dependsOn": [],
             "tags": {
                 "displayName": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()]))]"
             },
@@ -234,9 +236,9 @@
                     "domainNameLabel": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('vmsNames')[copyIndex()]))]"
                 }
             },
-            "copy": { 
-                "name": "pipscopy", 
-                "count": "[length(parameters('vmsNicIPAddresses'))]" 
+            "copy": {
+                "name": "pipscopy",
+                "count": "[length(parameters('vmsNicIPAddresses'))]"
             }
         },
         { //vms
@@ -296,9 +298,41 @@
                     ]
                 }
             },
-            "copy": { 
-                "name": "vmscopy", 
-                "count": "[length(parameters('vmsNames'))]" 
+            "resources": [
+                {
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat(parameters('vmsNames')[copyIndex()],'/createADForest')]",
+                    "apiVersion": "2015-05-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmsNames')[copyIndex()])]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.22.0.0",
+                        "settings": {
+                            "ModulesUrl": "[concat(variables('baseURL'),parameters('vmsNames')[copyIndex()],'ConfScript.ps1.zip')]",
+                            "ConfigurationFunction": "[concat('ConfScript.ps1','\\ConfFunction')]",
+                            "Properties": {
+                                "DomainName": "[variables('addcDomainName')]",
+                                "adminCreds": {
+                                    "UserName": "[parameters('adminUsername')]",
+                                    "Password": "PrivateSettingsRef:adminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "adminPassword": "[parameters('adminPassword')]"
+                            }
+                        }
+                    }
+                }
+            ],
+            "copy": {
+                "name": "vmscopy",
+                "count": "[length(parameters('vmsNames'))]"
             }
         },
         { //sql_nics
@@ -330,9 +364,9 @@
                     }
                 ]
             },
-            "copy": { 
-                "name": "sqlnicscopy", 
-                "count": "[length(parameters('sqlVmsNames'))]" 
+            "copy": {
+                "name": "sqlnicscopy",
+                "count": "[length(parameters('sqlVmsNames'))]"
             }
         },
         { //sql_pips
@@ -340,7 +374,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-05-01-preview",
-            "dependsOn": [ ],
+            "dependsOn": [],
             "tags": {
                 "displayName": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()]))]"
             },
@@ -350,9 +384,9 @@
                     "domainNameLabel": "[toLower(concat(parameters('deploymentPrefix'), 'pip',parameters('sqlVmsNames')[copyIndex()]))]"
                 }
             },
-            "copy": { 
-                "name": "sqlpipscopy", 
-                "count": "[length(parameters('sqlNicIPAddresses'))]" 
+            "copy": {
+                "name": "sqlpipscopy",
+                "count": "[length(parameters('sqlNicIPAddresses'))]"
             }
         },
         { //sql_vms
@@ -412,11 +446,11 @@
                     ]
                 }
             },
-            "copy": { 
-                "name": "sqlvmscopy", 
-                "count": "[length(parameters('sqlVmsNames'))]" 
+            "copy": {
+                "name": "sqlvmscopy",
+                "count": "[length(parameters('sqlVmsNames'))]"
             }
         }
-     ],
-    "outputs": {  }
+    ],
+    "outputs": {}
 }

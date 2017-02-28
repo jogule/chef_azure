@@ -9,9 +9,17 @@
     <logonCredentials inherit="None">
       <profileName scope="Local">Custom</profileName>
       <userName>myadmin</userName>
-      <password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA9v+ePBxgE0anJtZj3sbe4QAAAAACAAAAAAADZgAAwAAAABAAAABBq31s7+2bHujOywCRnm9wAAAAAASAAACgAAAAEAAAALbZI2ECLPOoAaAwTSnhLBsgAAAApjC6K1BPFZGKCPADWFlCiUCUaZtFsYW/JidZ2wvmyAwUAAAAMN+bLsyt+PaWUWAmmvJtfVLNZe4=</password>
+      <password>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA9v+ePBxgE0anJtZj3sbe4QAAAAACAAAAAAADZgAAwAAAABAAAAAUHSSssQGgf0RKp2vqawN5AAAAAASAAACgAAAAEAAAAJ0J8tnhllkQJTHl8wqWvyAgAAAAeHD09m4fOvoyfqirVmOy8rHHvkbI6Sb1NfN0At5Tg98UAAAAlR0PrbAO8dVgPS6qbW7rmGWWu98=</password>
       <domain />
     </logonCredentials>
+    <displaySettings inherit="None">
+      <liveThumbnailUpdates>True</liveThumbnailUpdates>
+      <allowThumbnailSessionInteraction>False</allowThumbnailSessionInteraction>
+      <showDisconnectedThumbnails>True</showDisconnectedThumbnails>
+      <thumbnailScale>1</thumbnailScale>
+      <smartSizeDockedWindows>True</smartSizeDockedWindows>
+      <smartSizeUndockedWindows>True</smartSizeUndockedWindows>
+    </displaySettings>
     <server>
       <properties>
         <name>jglwap1pipwapadfs01.eastus2.cloudapp.azure.com</name>
