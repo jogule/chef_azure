@@ -227,7 +227,7 @@
             "name": "[parameters('vNetName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                "[concat('Microsoft.Network/networkSecurityGroups/', 'nsg')]"
             ],
             "properties": {
                 "addressSpace": {
@@ -241,7 +241,7 @@
                         "properties": {
                             "addressPrefix": "[parameters('wapSubnetPrefix')]",
                             "networkSecurityGroup": {
-                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups/', 'nsg')]"
                             }
                         }
                     }
