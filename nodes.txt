@@ -1,0 +1,5 @@
+host, kind
+jglwap1pipwapadfs01.eastus2.cloudapp.azure.com, web
+jglwap1pipwapadminhub01.eastus2.cloudapp.azure.com, web
+jglwap1pipwapsql01.eastus2.cloudapp.azure.com, web
+jglwap1pipwaptenanthub01.eastus2.cloudapp.azure.com, sql

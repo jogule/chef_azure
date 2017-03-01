@@ -149,7 +149,8 @@
     },
     "variables": {
         "storageName": "[concat(parameters('deploymentPrefix'), 'sa', substring(uniquestring(resourceGroup().id),0,3))]",
-        "baseURL": "https://raw.githubusercontent.com/jogule/chef_azure/master/"
+        "baseURL": "https://raw.githubusercontent.com/jogule/chef_azure/master/",
+        "chef_server_url": "https://jglwapchef.eastus2.cloudapp.azure.com/organizations/jglcorp"
     },
     "resources": [
         { //nsg
@@ -372,30 +373,11 @@
                     ]
                 }
             },
-            "resources": [
-                /*{
-                    "type": "extensions",
-                    "name": "MyExtension",
-                    "apiVersion": "2015-05-01-preview",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/',parameters('vmsNames')[copyIndex()])]"
-                    ],
-                    "properties": {
-                        "publisher": "Chef.Bootstrap.WindowsAzure",
-                        "type": "ChefClient",
-                        "typeHandlerVersion": "1210.12",
-                        "settings": {
-                            "validation_key": " Validation key",
-                            "client_rb": "client_rb file",
-                            "runlist": "Optional runlist"
-                        }
-                    }
-                },*/
+            "resources": [                
                 {
                     "apiVersion": "2015-06-15",
                     "type": "extensions",
-                    "name": "WinRMAllowAccess",
+                    "name": "[concat(parameters('vmsNames')[copyIndex()], 'WinRMAllowAccess')]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.Compute/virtualMachines/', parameters('vmsNames')[copyIndex()])]"
